@@ -1,7 +1,8 @@
 {
   "dependencies": {
-    "twikoo-netlify": "latest",
     "mongodb": "^4.0.0",
-    "crypto": "^1.0.1"
+    "crypto": "^1.0.1",
+    "dompurify": "^2.3.3",
+    "jsdom": "^16.4.0"
   }
 }

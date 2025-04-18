@@ -1,5 +1,10 @@
 const { MongoClient } = require('mongodb');
 const crypto = require('crypto');
+const { JSDOM } = require('jsdom');
+const createDOMPurify = require('dompurify');
+
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window);
 
 exports.handler = async (event, context) => {
   // 确保只接受 POST 请求
@@ -8,11 +13,17 @@ exports.handler = async (event, context) => {
   }
 
   // 解析请求体
-  let event = JSON.parse(event.body || '{}');
+  let requestBody;
+  try {
+    requestBody = JSON.parse(event.body || '{}');
+  } catch (error) {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) };
+  }
 
   // 验证参数
-  if (!event) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Missing event' }) };
+  const { content, url, href } = requestBody;
+  if (!content) {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields: content' }) };
   }
 
   try {
@@ -20,25 +31,25 @@ exports.handler = async (event, context) => {
     await client.connect();
     const db = client.db('test');
     const collection = db.collection('comment');
-    const timestamp = Date.now()
+
     const commentDo = {
-      _id: require('crypto').randomBytes(16).toString('hex'),
-      uid: 'deepseek-uid',
-      nick: 'DeepSeek',
+      _id: crypto.randomBytes(16).toString('hex'),
+      uid: requestBody.uid || null,
+      nick: requestBody.nick,
       mail: '',
       mailMd5: '',
-      link: 'https://deepseek.com',
-      ua: 'DeepSeek Bot',
+      link: requestBody.link || null,
+      ua: requestBody.ua || null,
       ip: '127.0.0.1',
       master: false,
-      url: comment.url,
-      href: comment.href,
-      comment: DOMPurify.sanitize(comment.comment, { FORBID_TAGS: ['style'], FORBID_ATTR: ['style'] }),
+      url: url,
+      href: href,
+      comment: DOMPurify.sanitize(content, { FORBID_TAGS: ['style'], FORBID_ATTR: ['style'] }),
       pid: null,
       rid: null,
       isSpam: false,
-      created: timestamp,
-      updated: timestamp
+      created: new Date(),
+      updated: new Date()
     };
 
     await collection.insertOne(commentDo);
