@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "twikoo-netlify": "latest"
+    "twikoo-netlify": "latest",
+    "mongodb": "^4.0.0",
+    "crypto": "^1.0.1"
   }
 }
